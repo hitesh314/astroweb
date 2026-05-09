@@ -23,13 +23,13 @@ const site =
 
 export const metadata: Metadata = {
   metadataBase: site ? new URL(site) : new URL("http://localhost:3000"),
-  title: "AstroMarriage | Discover Your Destiny",
+  title: "AstroMarriage · Love marriage or arranged?",
   description:
-    "Vedic marriage insights and celestial union guidance — your path to alignment.",
+    "Simple marriage readings — love vs arranged, real feedback, from ₹249. Chat with an astrologer; first 3 minutes free.",
   openGraph: {
     title: "AstroMarriage",
     description:
-      "AI-assisted Vedic marriage insights powered by AstroMarriage and Supabase.",
+      "Love marriage vs arranged — plain answers. ₹249 reading. Astrologer chat: first 3 minutes free.",
   },
 };
 
