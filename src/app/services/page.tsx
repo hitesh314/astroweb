@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MarketingHeader from "@/components/marketing-header";
+import { whatsappPlanInterestHref } from "@/lib/contact/whatsapp-payment";
 
 export const metadata: Metadata = {
   title: "Services & offerings | AstroMarriage",
@@ -9,16 +10,16 @@ export const metadata: Metadata = {
     "Vedic marriage insights, kundli, compatibility, AI reports, and consultations — explore everything before you create an account.",
 };
 
-const CHECKOUT_NEXT = "/dashboard/subscription";
-
-function BuyButton({ label = "Choose plan" }: { label?: string }) {
+function BuyButton({ label, planName }: { label: string; planName: string }) {
   return (
-    <Link
-      href={`/auth/login?next=${encodeURIComponent(CHECKOUT_NEXT)}`}
+    <a
+      href={whatsappPlanInterestHref(planName)}
+      target="_blank"
+      rel="noopener noreferrer"
       className="inline-flex rounded-full bg-stone-900 px-6 py-2.5 text-sm font-semibold text-[#fdfcf9] shadow-sm hover:bg-stone-800"
     >
       {label}
-    </Link>
+    </a>
   );
 }
 
@@ -27,32 +28,32 @@ export default function ServicesPage() {
     {
       title: "Celestial union forecast",
       body: "Love, arranged, and hybrid marriage scores with confidence bands and an AI narrative you can share.",
-      from: "₹499",
+      priceNote: "Pricing on WhatsApp",
     },
     {
       title: "Kundli & birth chart storage",
       body: "Save birth place, time zone, and raw chart JSON for repeat analyses and PDF exports.",
-      from: "₹299",
+      priceNote: "Pricing on WhatsApp",
     },
     {
       title: "Partner compatibility",
       body: "Pair two saved kundli profiles for a dedicated compatibility reading and score.",
-      from: "₹699",
+      priceNote: "Pricing on WhatsApp",
     },
     {
       title: "AI marriage coach (chat)",
       body: "Private chat history stored under your account with prompt lineage for trust and safety.",
-      from: "Subscribe",
+      priceNote: "Subscription · ask on WhatsApp",
     },
     {
       title: "Expert consultations",
       body: "Book a human astrologer; calendar and notes sync to your profile when you check out.",
-      from: "₹1,499",
+      priceNote: "Pricing on WhatsApp",
     },
     {
       title: "Shareable report cards",
       body: "Generated visuals land in secure storage — perfect for Instagram-ready shares.",
-      from: "Add-on",
+      priceNote: "Add-on · ask on WhatsApp",
     },
   ];
 
@@ -67,8 +68,9 @@ export default function ServicesPage() {
           Explore every service first
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-stone-600">
-          There is no paywall to browse. When you are ready to purchase, save a reading, or
-          unlock subscriptions, we will ask you to sign in — one quick step.
+          There is no paywall to browse. When you purchase or unlock features in your
+          dashboard, we may ask you to sign in — one quick step. Payment is coordinated on
+          WhatsApp (+91 9358214529).
         </p>
 
         <ul className="mt-14 grid gap-6 sm:grid-cols-2">
@@ -82,7 +84,7 @@ export default function ServicesPage() {
                 {c.body}
               </p>
               <p className="mt-4 text-xs font-medium uppercase tracking-wide text-stone-500">
-                From {c.from}
+                {c.priceNote}
               </p>
             </li>
           ))}
@@ -91,8 +93,8 @@ export default function ServicesPage() {
         <section className="mt-20 rounded-3xl border border-stone-200 bg-white p-10 shadow-inner shadow-stone-100">
           <h2 className="text-2xl font-semibold text-stone-900">Plans</h2>
           <p className="mt-2 text-sm text-stone-600">
-            Pick a tier when you are ready — signing in happens at checkout, not before you
-            explore.
+            Pick a tier when you are ready — we&apos;ll continue on WhatsApp for payment and
+            details.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
@@ -103,12 +105,12 @@ export default function ServicesPage() {
               },
               {
                 name: "Union",
-                price: "₹799 / mo",
+                price: "On request",
                 blurb: "Reports, kundli saves, and sharing",
               },
               {
                 name: "Destiny",
-                price: "₹1,999 / mo",
+                price: "On request",
                 blurb: "Everything + priority consults & chat",
               },
             ].map((p) => (
@@ -117,7 +119,11 @@ export default function ServicesPage() {
                 className="flex flex-col rounded-2xl border border-stone-100 bg-stone-50/80 p-6"
               >
                 <p className="text-sm font-semibold text-amber-900">{p.name}</p>
-                <p className="mt-2 text-2xl font-semibold text-stone-900">{p.price}</p>
+                <p
+                  className={`mt-2 font-semibold text-stone-900 ${p.price === "Free" ? "text-2xl" : "text-lg tracking-tight"}`}
+                >
+                  {p.price}
+                </p>
                 <p className="mt-2 flex-1 text-sm text-stone-600">{p.blurb}</p>
                 {p.name === "Seeker" ? (
                   <Link
@@ -128,7 +134,7 @@ export default function ServicesPage() {
                   </Link>
                 ) : (
                   <div className="mt-6">
-                    <BuyButton label={`Get ${p.name}`} />
+                    <BuyButton label={`Get ${p.name}`} planName={p.name} />
                   </div>
                 )}
               </div>

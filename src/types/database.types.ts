@@ -220,6 +220,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      google_auth_links: {
+        Row: {
+          created_at: string;
+          google_sub: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          google_sub: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          google_sub?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       kundli_data: {
         Row: {
           birth_city: string | null;
@@ -255,6 +276,27 @@ export type Database = {
           longitude?: number | null;
           raw_chart_json?: Json;
           timezone?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      phone_auth_links: {
+        Row: {
+          created_at: string;
+          phone_e164: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          phone_e164: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          phone_e164?: string;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -337,6 +379,39 @@ export type Database = {
           stripe_customer_id?: string | null;
           updated_at?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      whatsapp_otp_challenges: {
+        Row: {
+          attempts: number;
+          code_hash: string;
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          phone_e164: string;
+          salt: string;
+        };
+        Insert: {
+          attempts?: number;
+          code_hash: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          phone_e164: string;
+          salt: string;
+        };
+        Update: {
+          attempts?: number;
+          code_hash?: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          phone_e164?: string;
+          salt?: string;
         };
         Relationships: [];
       };

@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   metadataBase: site ? new URL(site) : new URL("http://localhost:3000"),
   title: "AstroMarriage · Love marriage or arranged?",
   description:
-    "Simple marriage readings — love vs arranged, real feedback, from ₹249. Chat with an astrologer; first 3 minutes free.",
+    "Marriage readings — love vs arranged, spelled out plainly. Chat with an astrologer; first 3 minutes free.",
   openGraph: {
     title: "AstroMarriage",
     description:
-      "Love marriage vs arranged — plain answers. ₹249 reading. Astrologer chat: first 3 minutes free.",
+      "Love marriage vs arranged — plain answers. WhatsApp us for pricing and booking. Astrologer chat: first 3 minutes free.",
   },
 };
 

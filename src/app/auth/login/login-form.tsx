@@ -2,134 +2,171 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { normalizeE164Phone } from "@/lib/auth/phone";
 
-function callbackUrl(origin: string, next?: string | null) {
-  const q = next ? `?next=${encodeURIComponent(next)}` : "";
-  return `${origin}/auth/callback${q}`;
-}
-
-const PHONE_LOGIN_ENABLED =
-  process.env.NEXT_PUBLIC_ENABLE_PHONE_LOGIN === "true";
-
-/** Supabase expects E.164: + and country code, digits only (e.g. +919876543210). */
-function normalizePhoneE164(raw: string): string | null {
-  const compact = raw.trim().replace(/[\s().-]/g, "");
-  if (!compact) return null;
-
-  if (compact.startsWith("+")) {
-    const rest = compact.slice(1).replace(/\D/g, "");
-    if (rest.length < 8 || rest.length > 15) return null;
-    return `+${rest}`;
-  }
-
-  let digits = compact.replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
-  if (digits.length === 10 && /^[6-9]/.test(digits)) {
-    return `+91${digits}`;
-  }
-  if (digits.length >= 10 && digits.length <= 15) {
-    return `+${digits}`;
-  }
-  return null;
-}
-
-function isSmsProviderNotConfigured(message: string) {
-  const m = message.toLowerCase();
+function GoogleIcon({ className }: { className?: string }) {
   return (
-    m.includes("unsupported phone provider") ||
-    (m.includes("phone provider") && m.includes("not supported"))
+    <svg className={className} aria-hidden viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      />
+    </svg>
   );
 }
 
-function toastPhoneAuthError(message: string) {
-  if (isSmsProviderNotConfigured(message)) {
-    toast.error("SMS provider not set up in Supabase", {
-      description:
-        "Dashboard → Authentication → Providers → Phone — add Twilio, MessageBird, etc. https://supabase.com/docs/guides/auth/phone-login",
-      duration: 14000,
-    });
-    return;
-  }
-  toast.error(message);
-}
-
-export default function LoginForm({ nextHref }: { nextHref?: string }) {
+function LoginFormInner({ nextHref }: { nextHref?: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
   const [phone, setPhone] = useState("");
-  const [phoneE164, setPhoneE164] = useState("");
-  const [smsCode, setSmsCode] = useState("");
-  const [phoneStep, setPhoneStep] = useState<"idle" | "sent">("idle");
+  const [otpCode, setOtpCode] = useState("");
+  const [step, setStep] = useState<"enter_phone" | "enter_code">("enter_phone");
   const [busy, setBusy] = useState(false);
-  const supabase = createBrowserSupabaseClient();
 
-  const nextPath = nextHref?.startsWith("/") ? nextHref : "/dashboard";
+  const destination =
+    nextHref?.startsWith("/") && !nextHref.startsWith("//") ? nextHref : "/dashboard";
 
-  async function sendEmailOtp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    const origin = window.location.origin;
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: callbackUrl(origin, nextHref ?? null),
-      },
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Check your email — open the one-time sign-in link we sent.");
-  }
+  const googleHref = `/api/auth/google?next=${encodeURIComponent(destination)}`;
 
-  async function sendPhoneOtp(e: React.FormEvent) {
-    e.preventDefault();
-    const e164 = normalizePhoneE164(phone);
-    if (!e164) {
+  useEffect(() => {
+    const err = searchParams.get("error");
+    const greason = searchParams.get("greason");
+    if (!err) return;
+
+    if (err === "auth") {
+      toast.error("Sign-in could not finish. Try again or use another method.");
+    } else if (err === "google") {
+      const messages: Record<string, string> = {
+        missing_env: "Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET on the server.",
+        oauth_denied: "Google sign-in was cancelled.",
+        oauth_provider:
+          "Google rejected the OAuth request (consent screen, app verification, etc.). Retry or check Google Cloud Console.",
+        missing_code:
+          "Google did not return an authorization code. Try signing in again from the login page.",
+        bad_state:
+          "OAuth state did not match (cookies blocked or two different tabs). Retry in one tab; allow cookies for this site.",
+        token_exchange:
+          "Could not swap the Google code for tokens—usually wrong CLIENT_SECRET or redirect URI mismatch. In Google Cloud, set Authorized redirect URI to {your exact site}/auth/google/callback (same host as the address bar, e.g. localhost vs 127.0.0.1).",
+        no_id_token:
+          "Google did not return id_token—confirm scopes openid email profile on the OAuth client.",
+        bad_id_token: "Google ID token could not be verified; ensure GOOGLE_CLIENT_ID matches your OAuth Web client.",
+        supabase_config:
+          "SUPABASE_SERVICE_ROLE_KEY is invalid or mismatched—fix it using Dashboard → Settings → API for this project.",
+        provision:
+          "Account could not be created in Supabase—check server logs and that Auth sign-ups are allowed; apply google_auth_links migration if missing.",
+        session:
+          "Supabase refused email sign-in—open Dashboard → Authentication → Providers → Email and enable “Email” (needed for password session after provisioning). Then try Google again.",
+      };
       toast.error(
-        "Use a full mobile number with country code, e.g. +919876543210 or 9876543210.",
+        greason && messages[greason]
+          ? messages[greason]
+          : "Google sign-in failed. Compare server logs ([google/callback]) with Google Cloud OAuth settings.",
       );
-      return;
     }
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: e164,
-      options: {
-        shouldCreateUser: true,
-      },
-    });
-    setBusy(false);
-    if (error) {
-      toastPhoneAuthError(error.message);
-      return;
-    }
-    setPhoneE164(e164);
-    setPhoneStep("sent");
-    toast.success("Enter the code we texted to your phone.");
-  }
 
-  async function verifyPhoneOtp(e: React.FormEvent) {
+    const next = searchParams.get("next");
+    const cleaned =
+      next?.startsWith("/") && !next.startsWith("//")
+        ? `/auth/login?next=${encodeURIComponent(next)}`
+        : "/auth/login";
+    router.replace(cleaned, { scroll: false });
+  }, [searchParams, router]);
+
+  async function requestOtp(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.verifyOtp({
-      phone: phoneE164,
-      token: smsCode.trim(),
-      type: "sms",
-    });
-    setBusy(false);
-    if (error) {
-      toastPhoneAuthError(error.message);
-      return;
+    try {
+      const normalized = normalizeE164Phone(phone);
+      const res = await fetch("/api/auth/whatsapp/request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ phone: normalized }),
+      });
+      const data = (await res.json()) as { error?: string };
+
+      if (!res.ok) {
+        toast.error(data.error ?? "Could not send code.");
+        return;
+      }
+
+      setPhone(normalized);
+      setStep("enter_code");
+      toast.success("We sent your sign-in code on WhatsApp.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
     }
-    toast.success("Signed in.");
-    router.push(nextPath);
-    router.refresh();
+  }
+
+  async function verifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/whatsapp/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          phone: normalizeE164Phone(phone),
+          code: otpCode.replace(/\s/g, ""),
+          next: destination,
+        }),
+      });
+
+      const data = (await res.json()) as { error?: string; redirect?: string };
+
+      if (!res.ok) {
+        toast.error(data.error ?? "Verification failed.");
+        return;
+      }
+
+      if (data.redirect) {
+        router.push(data.redirect);
+        router.refresh();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendCode() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/whatsapp/request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ phone: normalizeE164Phone(phone) }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        toast.error(data.error ?? "Could not resend.");
+        return;
+      }
+      toast.success("Sent another WhatsApp code.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -147,126 +184,99 @@ export default function LoginForm({ nextHref }: { nextHref?: string }) {
           Sign in
         </h1>
         <p className="mt-3 text-center text-sm text-stone-600">
-          {PHONE_LOGIN_ENABLED
-            ? "One-time sign-in by email (secure link) or phone (SMS). No password."
-            : "Sign in with email — we’ll send a secure one-time link. (SMS is off until Supabase phone + this app flag are configured.)"}
+          Sign in with Google (hosted OAuth), or use WhatsApp with your number in international
+          format. New Google users get an AstroMarriage account in our database automatically.
         </p>
 
-        <div className="mt-10 space-y-8">
-          <form onSubmit={sendEmailOtp} className="space-y-3">
-            <label className="block text-sm font-medium text-stone-700">
-              Email
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full bg-stone-900 py-3 text-sm font-semibold text-[#fdfcf9] transition hover:bg-stone-800 disabled:opacity-60"
-            >
-              Email me a sign-in link
-            </button>
-          </form>
+        <div className="mx-auto mt-10 space-y-4">
+          <a
+            href={googleHref}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-stone-200 bg-white py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50"
+          >
+            <GoogleIcon className="size-5 shrink-0" />
+            Continue with Google
+          </a>
 
-          {PHONE_LOGIN_ENABLED ? (
-            <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-stone-200" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase tracking-wide">
-                  <span className="bg-[#fdfcf9] px-3 text-stone-500">or</span>
-                </div>
-              </div>
+          <div className="relative flex items-center gap-4 py-1">
+            <div className="h-px flex-1 bg-stone-200" />
+            <span className="text-xs font-medium uppercase tracking-wider text-stone-400">
+              or WhatsApp OTP
+            </span>
+            <div className="h-px flex-1 bg-stone-200" />
+          </div>
 
-              {phoneStep === "idle" ? (
-                <form onSubmit={sendPhoneOtp} className="space-y-3">
-                  <label className="block text-sm font-medium text-stone-700">
-                    Phone (SMS OTP)
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
-                      placeholder="+919876543210 or 9876543210"
-                      autoComplete="tel"
-                    />
-                  </label>
-                  <p className="text-xs text-stone-500">
-                    E.164 format. Ten-digit India numbers get +91 automatically.
-                  </p>
-                  <button
-                    type="submit"
-                    disabled={busy || phone.trim().length < 8}
-                    className="w-full rounded-full border border-stone-300 bg-white py-3 text-sm font-semibold text-stone-900 hover:bg-stone-50 disabled:opacity-60"
-                  >
-                    Send SMS code
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={verifyPhoneOtp} className="space-y-3">
-                  <p className="text-sm text-stone-600">
-                    Code sent to{" "}
-                    <span className="font-medium text-stone-800">{phoneE164}</span>
-                  </p>
-                  <label className="block text-sm font-medium text-stone-700">
-                    SMS code
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      required
-                      value={smsCode}
-                      onChange={(e) =>
-                        setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 8))
-                      }
-                      className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 font-mono text-lg tracking-widest outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
-                      placeholder="123456"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={busy || smsCode.trim().length < 4}
-                    className="w-full rounded-full bg-stone-900 py-3 text-sm font-semibold text-[#fdfcf9] hover:bg-stone-800 disabled:opacity-60"
-                  >
-                    Verify & sign in
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="w-full text-center text-xs text-stone-500 underline"
-                    onClick={() => {
-                      setPhoneStep("idle");
-                      setPhoneE164("");
-                      setSmsCode("");
-                    }}
-                  >
-                    Use a different number
-                  </button>
-                </form>
-              )}
-            </>
+          {step === "enter_phone" ? (
+            <form onSubmit={requestOtp} className="space-y-3">
+              <label className="block text-sm font-medium text-stone-700">
+                WhatsApp number
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
+                  placeholder="+919876543210"
+                  autoComplete="tel"
+                  disabled={busy}
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-full bg-stone-900 py-3 text-sm font-semibold text-[#fdfcf9] transition hover:bg-stone-800 disabled:opacity-60"
+              >
+                Send WhatsApp code
+              </button>
+            </form>
           ) : (
-            <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 px-4 py-4 text-sm text-stone-700">
-              <p className="font-medium text-stone-900">SMS sign-in is turned off</p>
-              <p className="mt-2 leading-relaxed">
-                After you add an SMS provider under Supabase → Authentication → Phone,
-                set{" "}
-                <code className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-stone-800">
-                  NEXT_PUBLIC_ENABLE_PHONE_LOGIN=true
-                </code>{" "}
-                in <code className="font-mono text-xs">.env.local</code> and restart{" "}
-                <code className="font-mono text-xs">npm run dev</code>.
+            <form onSubmit={verifyOtp} className="space-y-3">
+              <p className="text-sm text-stone-600">
+                Code sent to{" "}
+                <span className="font-medium text-stone-800">{phone}</span>
               </p>
-            </div>
+              <label className="block text-sm font-medium text-stone-700">
+                6-digit code
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9\s]*"
+                  maxLength={8}
+                  required
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  disabled={busy}
+                  className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-center text-lg tracking-[0.3em] text-stone-900 shadow-sm outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
+                  placeholder="••••••"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-full bg-stone-900 py-3 text-sm font-semibold text-[#fdfcf9] transition hover:bg-stone-800 disabled:opacity-60"
+              >
+                Verify and sign in
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void resendCode()}
+                className="w-full text-sm font-medium text-amber-900 hover:underline"
+              >
+                Resend code on WhatsApp
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setStep("enter_phone");
+                  setOtpCode("");
+                }}
+                className="w-full text-sm text-stone-500 hover:text-stone-800"
+              >
+                ← Use a different number
+              </button>
+            </form>
           )}
         </div>
 
@@ -275,19 +285,19 @@ export default function LoginForm({ nextHref }: { nextHref?: string }) {
             ← Back home
           </Link>
         </p>
-
-        <button
-          type="button"
-          className="mt-10 block w-full text-center text-xs text-stone-500 underline"
-          onClick={async () => {
-            await supabase.auth.signOut();
-            toast.message("Signed out");
-            router.push("/");
-          }}
-        >
-          Sign out everywhere on this device
-        </button>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginForm(props: { nextHref?: string }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-dvh bg-gradient-to-b from-[#fdfcf9] to-[#f3ebe0] px-6 py-16" />
+      }
+    >
+      <LoginFormInner {...props} />
+    </Suspense>
   );
 }

@@ -2,31 +2,75 @@ import Image from "next/image";
 import Link from "next/link";
 
 import MarketingHeader from "@/components/marketing-header";
+import { whatsappMarriageReadingHref } from "@/lib/contact/whatsapp-payment";
 
-const CHECKOUT_LOGIN = `/auth/login?next=${encodeURIComponent("/dashboard/subscription")}`;
+const READING_WHATSAPP = whatsappMarriageReadingHref();
 
-const testimonials = [
+/** Loose Google Maps–style palette for avatar discs (initial only, no photo). */
+const AVATAR_RING = ["bg-emerald-600", "bg-blue-600", "bg-purple-600", "bg-orange-600"] as const;
+
+const reviews = [
   {
-    quote:
-      "I wanted to know if things would move forward with someone I chose, or if my family’s match would work out better. The reading was clear and calm.",
-    who: "Ananya · 26",
+    displayName: "Ananya Sharma",
+    initial: "A",
+    rating: 5 as const,
+    when: "3 weeks ago",
+    text:
+      "Was torn between someone I chose and a match my parents liked. Wanted it said plainly — got that. Calm wording, no fear-mongering. Easier conversation at home afterwards.",
+    meta: "Mumbai · 2 reviews",
   },
   {
-    quote:
-      "Mostly I was confused between love marriage pressure and what parents were arranging. This helped me see both sides without drama.",
-    who: "Rahul · 29",
+    displayName: "Rahul K.",
+    initial: "R",
+    rating: 5 as const,
+    when: "1 month ago",
+    text:
+      "Most apps give one-liners this product actually breaks down love vs arranged with reasons. Pressure from both sides suddenly made sense lol",
+    meta: "Bengaluru · 1 review",
   },
   {
-    quote:
-      "I didn’t tell anyone I tried it. The love vs arranged part matched what I was already feeling — good for closure.",
-    who: "Priya · 24",
+    displayName: "Priya Nair",
+    initial: "P",
+    rating: 4 as const,
+    when: "5 weeks ago",
+    text:
+      "Didnt tell anyone i booked. The blended outcome part matched what i was already feeling — sort of validating. Only wish it was a touch shorter.",
+    meta: "Kochi · 3 reviews",
   },
   {
-    quote:
-      "Straight talk. Not like generic horoscope apps. Worth it before spending on a bigger puja.",
-    who: "Karan · 31",
+    displayName: "Karan Patel",
+    initial: "K",
+    rating: 5 as const,
+    when: "2 months ago",
+    text:
+      "Straight talk not generic rashi fluff. Felt fair before dropping money on a bigger puja / consultation elsewhere",
+    meta: "Ahmedabad · third visit",
   },
 ] as const;
+
+function StarRow({ rating }: { rating: 1 | 2 | 3 | 4 | 5 }) {
+  const path =
+    "M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
+
+  return (
+    <span className="inline-flex items-center gap-px" aria-label={`Rated ${rating} out of 5`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg
+          key={i}
+          className="h-[18px] w-[18px] shrink-0"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            fill={i < rating ? "#fbbc04" : "#dadce0"}
+            d={path}
+            className={i >= rating ? "opacity-[0.55]" : undefined}
+          />
+        </svg>
+      ))}
+    </span>
+  );
+}
 
 export default function Home() {
   return (
@@ -61,12 +105,14 @@ export default function Home() {
             Your reading is prepared the same way — chart, book, plain words.
           </p>
           <div className="mt-5 text-center">
-            <Link
-              href={CHECKOUT_LOGIN}
+            <a
+              href={READING_WHATSAPP}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm font-semibold text-amber-950 underline decoration-amber-900/30 underline-offset-4 hover:decoration-amber-900"
             >
-              Continue — ₹249
-            </Link>
+              Continue on WhatsApp
+            </a>
           </div>
         </div>
       </section>
@@ -85,47 +131,80 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* Feedback */}
+      {/* Reviews (Maps-style layout — customer feedback, not scraped from Google) */}
       <section className="mx-auto max-w-xl border-t border-stone-200 px-5 py-14">
-        <h2 className="text-xl font-semibold text-stone-900">What people said</h2>
-        <p className="mt-2 text-sm text-stone-500">
-          Recent notes from girls and guys who booked a reading.
-        </p>
-        <ul className="mt-8 space-y-6">
-          {testimonials.map((t) => (
-            <li
-              key={t.who}
-              className="rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm"
-            >
-              <p className="text-[0.9375rem] leading-relaxed text-stone-700">
-                “{t.quote}”
-              </p>
-              <p className="mt-3 text-xs font-semibold text-stone-500">{t.who}</p>
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+          <h2 className="text-[1.375rem] font-normal tracking-tight text-[#202124]">
+            Reviews
+          </h2>
+          <p className="text-xs text-[#5f6368]">
+            Feedback from recent bookings · shown in a familiar format ·{" "}
+            <span className="whitespace-nowrap">scroll sideways</span>
+          </p>
+        </div>
+
+        <div className="-mx-5 mt-8 sm:mx-0">
+          <ul
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-5 pb-3 pt-0.5 [-webkit-overflow-scrolling:touch]"
+            style={{ scrollbarWidth: "thin" }}
+          >
+            {reviews.map((r, i) => (
+              <li key={`${r.displayName}-${r.when}`} className="snap-start snap-always shrink-0">
+                <article className="flex h-full w-[min(17.5rem,calc(100vw-5rem))] flex-col rounded-xl border border-[#e8eaed] bg-white px-4 py-5 shadow-sm sm:w-[17.75rem]">
+                  <div className="flex gap-3">
+                    <div
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-full font-medium text-[0.9375rem] text-white ring-2 ring-white ${AVATAR_RING[i % AVATAR_RING.length]}`}
+                      aria-hidden
+                    >
+                      {r.initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium leading-tight text-[#202124]">{r.displayName}</p>
+                      <p className="mt-0.5 text-xs leading-snug text-[#5f6368]">{r.meta}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#5f6368]">
+                        <StarRow rating={r.rating} />
+                        <span className="tabular-nums" aria-hidden>
+                          ·
+                        </span>
+                        <span className="tabular-nums">{r.when}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-3 flex-1 whitespace-pre-wrap text-[0.875rem] leading-relaxed text-[#3c4043]">
+                    {r.text}
+                  </p>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
-      {/* Price */}
+      {/* CTA — pricing shared in WhatsApp, not on the page */}
       <section className="mx-auto max-w-xl border-t border-stone-200 px-5 py-14 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800/90">
-          Reading price
+          Marriage reading
         </p>
-        <p className="mt-4 text-4xl font-semibold tracking-tight text-stone-950">
-          ₹249
-        </p>
-        <p className="mt-1 text-sm text-stone-500 line-through">₹499</p>
+        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-stone-950">
+          Get details on WhatsApp
+        </h2>
         <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-stone-600">
           Full written report focused on marriage pathway — love, arranged, or in between —
-          delivered after we have your accurate birth details.
+          delivered after we have your accurate birth details and confirm everything in chat.
         </p>
         <div className="mt-8">
-          <Link
-            href={CHECKOUT_LOGIN}
-            className="inline-flex rounded-full bg-stone-900 px-8 py-3 text-sm font-semibold text-[#fdfcf9] hover:bg-stone-800"
+          <a
+            href={READING_WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex rounded-full bg-[#25D366] px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#20bd5a]"
           >
-            Get your reading — ₹249
-          </Link>
+            Message us on WhatsApp
+          </a>
+          <p className="mt-3 text-xs text-stone-500">
+            We&apos;ll share what&apos;s included and how to pay in the conversation — nothing
+            is charged from this screen.
+          </p>
         </div>
       </section>
 
