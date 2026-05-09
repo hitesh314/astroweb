@@ -3,6 +3,7 @@ import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 
 import AppProviders from "@/components/providers";
 import { PRACTITIONER } from "@/lib/site/practitioner";
+import { searchThemesKeywords } from "@/lib/site/search-themes";
 
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
     template: `%s · ${PRACTITIONER.siteTitleSuffix}`,
   },
   description: defaultMetaDescription,
+  keywords: searchThemesKeywords,
   applicationName: PRACTITIONER.practiceName,
   openGraph: {
     type: "website",
