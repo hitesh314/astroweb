@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const digits = parsed.data.code.replace(/\s/g, "");
   if (!/^\d{6}$/.test(digits)) {
-    return NextResponse.json({ error: "Enter the 6-digit code from WhatsApp." }, { status: 400 });
+    return NextResponse.json({ error: "Enter the 6-digit code we sent you." }, { status: 400 });
   }
 
   let phoneE164: string;
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  let redirect =
+  const redirect =
     parsed.data.next && parsed.data.next.startsWith("/") && !parsed.data.next.startsWith("//")
       ? parsed.data.next
       : "/dashboard";

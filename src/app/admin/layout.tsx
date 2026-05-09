@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/actions/auth";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,12 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  const isElevatedAdmin = profile?.is_admin === true || profile?.role === "admin";
+  if (!isElevatedAdmin) {
     redirect("/dashboard");
   }
 
@@ -29,15 +31,20 @@ export default async function AdminLayout({
     <div className="min-h-dvh bg-neutral-950 text-neutral-50">
       <header className="border-b border-neutral-800">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-          <span className="text-sm font-semibold tracking-wide text-amber-200">
-            AstroMarriage Admin
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold tracking-wide text-amber-200">
+              {PRACTITIONER.shortName} · Admin
+            </span>
+            <Link
+              href="/admin/chat"
+              className="rounded-lg border border-amber-500/45 bg-amber-950/50 px-3 py-2 text-sm font-medium text-amber-100 shadow-sm hover:border-amber-400/70 hover:bg-amber-900/45"
+            >
+              Inbox — all messages
+            </Link>
+          </div>
           <nav className="flex flex-wrap gap-4 text-sm text-neutral-300">
             <Link href="/admin" className="hover:text-white">
               Overview
-            </Link>
-            <Link href="/admin/blog" className="hover:text-white">
-              Blog
             </Link>
             <Link href="/admin/prompts" className="hover:text-white">
               AI prompts

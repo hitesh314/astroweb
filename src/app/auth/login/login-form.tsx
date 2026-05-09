@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { normalizeE164Phone } from "@/lib/auth/phone";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -108,7 +109,7 @@ function LoginFormInner({ nextHref }: { nextHref?: string }) {
 
       setPhone(normalized);
       setStep("enter_code");
-      toast.success("We sent your sign-in code on WhatsApp.");
+      toast.success("We sent your sign-in code.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -163,7 +164,7 @@ function LoginFormInner({ nextHref }: { nextHref?: string }) {
         toast.error(data.error ?? "Could not resend.");
         return;
       }
-      toast.success("Sent another WhatsApp code.");
+      toast.success("Sent another code.");
     } finally {
       setBusy(false);
     }
@@ -178,14 +179,15 @@ function LoginFormInner({ nextHref }: { nextHref?: string }) {
         className="mx-auto max-w-md"
       >
         <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-amber-800/90">
-          AstroMarriage
+          {PRACTITIONER.shortName}
         </p>
         <h1 className="mt-4 text-center text-3xl font-semibold tracking-tight">
           Sign in
         </h1>
         <p className="mt-3 text-center text-sm text-stone-600">
-          Sign in with Google (hosted OAuth), or use WhatsApp with your number in international
-          format. New Google users get an AstroMarriage account in our database automatically.
+          Returning clients · Google OAuth or a one-time code texted to your mobile (
+          {PRACTITIONER.shortName}&apos;s private charts portal). Google creates your secure client
+          folder automatically when you first approve access.
         </p>
 
         <div className="mx-auto mt-10 space-y-4">
@@ -196,88 +198,6 @@ function LoginFormInner({ nextHref }: { nextHref?: string }) {
             <GoogleIcon className="size-5 shrink-0" />
             Continue with Google
           </a>
-
-          <div className="relative flex items-center gap-4 py-1">
-            <div className="h-px flex-1 bg-stone-200" />
-            <span className="text-xs font-medium uppercase tracking-wider text-stone-400">
-              or WhatsApp OTP
-            </span>
-            <div className="h-px flex-1 bg-stone-200" />
-          </div>
-
-          {step === "enter_phone" ? (
-            <form onSubmit={requestOtp} className="space-y-3">
-              <label className="block text-sm font-medium text-stone-700">
-                WhatsApp number
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
-                  placeholder="+919876543210"
-                  autoComplete="tel"
-                  disabled={busy}
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={busy}
-                className="w-full rounded-full bg-stone-900 py-3 text-sm font-semibold text-[#fdfcf9] transition hover:bg-stone-800 disabled:opacity-60"
-              >
-                Send WhatsApp code
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={verifyOtp} className="space-y-3">
-              <p className="text-sm text-stone-600">
-                Code sent to{" "}
-                <span className="font-medium text-stone-800">{phone}</span>
-              </p>
-              <label className="block text-sm font-medium text-stone-700">
-                6-digit code
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9\s]*"
-                  maxLength={8}
-                  required
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  disabled={busy}
-                  className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-center text-lg tracking-[0.3em] text-stone-900 shadow-sm outline-none ring-amber-900/30 focus:border-amber-300 focus:ring-2"
-                  placeholder="••••••"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={busy}
-                className="w-full rounded-full bg-stone-900 py-3 text-sm font-semibold text-[#fdfcf9] transition hover:bg-stone-800 disabled:opacity-60"
-              >
-                Verify and sign in
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void resendCode()}
-                className="w-full text-sm font-medium text-amber-900 hover:underline"
-              >
-                Resend code on WhatsApp
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setStep("enter_phone");
-                  setOtpCode("");
-                }}
-                className="w-full text-sm text-stone-500 hover:text-stone-800"
-              >
-                ← Use a different number
-              </button>
-            </form>
-          )}
         </div>
 
         <p className="mt-12 text-center text-sm text-stone-500">

@@ -22,3 +22,46 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.stream-chat-scope {
+  height: min(560px, calc(100dvh - 12rem));
+  min-height: 28rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-chat-scope > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.stream-chat-scope .str-chat {
+  height: 100%;
+}
+
+.stream-chat-scope .str-chat__channel,
+.stream-chat-scope .str-chat__main-panel-inner {
+  height: 100%;
+}
+
+.stream-chat-scope .str-chat__main-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Admin Stream inbox (/admin/chat): two-pane layout outside light dashboard chrome */
+.stream-chat-admin-scope {
+  height: min(640px, calc(100dvh - 12rem));
+  max-height: min(640px, calc(100dvh - 12rem));
+  min-height: 28rem;
+}
+
+/* Fill the right pane; base `.stream-chat-scope` uses a fixed 560px height for dashboard */
+.stream-chat-admin-scope .stream-chat-scope {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}

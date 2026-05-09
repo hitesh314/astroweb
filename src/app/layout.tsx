@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 
 import AppProviders from "@/components/providers";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 
 import "./globals.css";
 
@@ -21,15 +22,34 @@ const site =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
 
+const metadataBaseUrl = site ? new URL(site) : new URL("http://localhost:3000");
+
+const ogTitle = `${PRACTITIONER.honorificAndName} — Love & arranged marriage, read plainly`;
+
+const ogDescription = `Personal Vedic (jyotiṣa) readings by ${PRACTITIONER.shortName}. Marriage partnering, timelines, calm language families can share — book or ask for rates in dashboard chat. Signed-in chat includes three introductory minutes.`;
+
+const defaultMetaDescription = `${PRACTITIONER.shortName} — love marriage vs arranged, from your chart in plain English. Booking and pricing in chat; short free window when you sign in.`;
+
 export const metadata: Metadata = {
-  metadataBase: site ? new URL(site) : new URL("http://localhost:3000"),
-  title: "AstroMarriage · Love marriage or arranged?",
-  description:
-    "Marriage readings — love vs arranged, spelled out plainly. Chat with an astrologer; first 3 minutes free.",
+  metadataBase: metadataBaseUrl,
+  title: {
+    default: `${PRACTITIONER.shortName} · Love marriage or arranged?`,
+    template: `%s · ${PRACTITIONER.siteTitleSuffix}`,
+  },
+  description: defaultMetaDescription,
+  applicationName: PRACTITIONER.practiceName,
   openGraph: {
-    title: "AstroMarriage",
-    description:
-      "Love marriage vs arranged — plain answers. WhatsApp us for pricing and booking. Astrologer chat: first 3 minutes free.",
+    type: "website",
+    locale: "en_IN",
+    url: metadataBaseUrl,
+    siteName: PRACTITIONER.shortName,
+    title: ogTitle,
+    description: ogDescription,
+  },
+  twitter: {
+    card: "summary",
+    title: ogTitle,
+    description: ogDescription,
   },
 };
 

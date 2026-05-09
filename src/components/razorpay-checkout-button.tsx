@@ -4,6 +4,8 @@ import Script from "next/script";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { PRACTITIONER } from "@/lib/site/practitioner";
+
 type Props = {
   amountPaise: number;
   buttonLabel?: string;
@@ -15,7 +17,7 @@ type Props = {
 export default function RazorpayCheckoutButton({
   amountPaise,
   buttonLabel = "Pay with Razorpay",
-  description = "AstroMarriage",
+  description = `${PRACTITIONER.shortName} readings`,
   prefilledEmail,
   prefilledName,
 }: Props) {
@@ -68,7 +70,7 @@ export default function RazorpayCheckoutButton({
         key,
         amount: data.amount ?? amountPaise,
         currency: data.currency ?? "INR",
-        name: "AstroMarriage",
+        name: PRACTITIONER.razorpayDisplayName,
         description,
         order_id: data.order_id,
         prefill: {

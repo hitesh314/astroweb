@@ -61,7 +61,7 @@ async function findAuthUserIdByEmail(
 
 /**
  * Ensures auth.users (+ public.users via trigger) for this Google account, sets one-time password
- * for Supabase SSR signInWithPassword (same approach as WhatsApp OTP).
+ * for Supabase SSR signInWithPassword (same approach as phone OTP).
  */
 export async function mintGooglePasswordForSession(
   admin: AdminClient,

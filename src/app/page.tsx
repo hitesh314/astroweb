@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import MarketingHeader from "@/components/marketing-header";
-import { whatsappMarriageReadingHref } from "@/lib/contact/whatsapp-payment";
-
-const READING_WHATSAPP = whatsappMarriageReadingHref();
+import { CHAT_LOGIN_HREF } from "@/lib/site/chat-cta";
 
 /** Loose Google Maps–style palette for avatar discs (initial only, no photo). */
 const AVATAR_RING = ["bg-emerald-600", "bg-blue-600", "bg-purple-600", "bg-orange-600"] as const;
@@ -105,14 +103,12 @@ export default function Home() {
             Your reading is prepared the same way — chart, book, plain words.
           </p>
           <div className="mt-5 text-center">
-            <a
-              href={READING_WHATSAPP}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={CHAT_LOGIN_HREF}
               className="text-sm font-semibold text-amber-950 underline decoration-amber-900/30 underline-offset-4 hover:decoration-amber-900"
             >
-              Continue on WhatsApp
-            </a>
+              Chat now
+            </Link>
           </div>
         </div>
       </section>
@@ -180,27 +176,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA — pricing shared in WhatsApp, not on the page */}
+      {/* CTA — confirm pricing in chat */}
       <section className="mx-auto max-w-xl border-t border-stone-200 px-5 py-14 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-800/90">
           Marriage reading
         </p>
         <h2 className="mt-4 text-2xl font-semibold tracking-tight text-stone-950">
-          Get details on WhatsApp
+          Chat now
         </h2>
         <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-stone-600">
           Full written report focused on marriage pathway — love, arranged, or in between —
           delivered after we have your accurate birth details and confirm everything in chat.
         </p>
         <div className="mt-8">
-          <a
-            href={READING_WHATSAPP}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex rounded-full bg-[#25D366] px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#20bd5a]"
+          <Link
+            href={CHAT_LOGIN_HREF}
+            className="inline-flex rounded-full bg-stone-900 px-8 py-3 text-sm font-semibold text-[#fdfcf9] shadow-sm hover:bg-stone-800"
           >
-            Message us on WhatsApp
-          </a>
+            Chat now
+          </Link>
           <p className="mt-3 text-xs text-stone-500">
             We&apos;ll share what&apos;s included and how to pay in the conversation — nothing
             is charged from this screen.
@@ -213,20 +207,27 @@ export default function Home() {
         <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-orange-50/40 px-5 py-6 text-center">
           <h2 className="text-lg font-semibold text-stone-900">Chat with an astrologer</h2>
           <p className="mt-2 text-sm leading-relaxed text-stone-600">
-            Prefer a quick back-and-forth? Open a chat after you sign in —{" "}
-            <strong className="text-stone-800">first 3 minutes free</strong>, then standard
-            rates apply.
+            In-dashboard chat supports text, photos, and voice notes (GetStream).{" "}
+            <strong className="text-stone-800">First 3 minutes free</strong> apply after you sign in.
           </p>
-          <Link
-            href="/auth/login"
-            className="mt-5 inline-block text-sm font-semibold text-amber-950 underline decoration-amber-900/30 underline-offset-4 hover:decoration-amber-900"
-          >
-            Sign in to start chat
-          </Link>
+          <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/dashboard/chat"
+              className="inline-flex rounded-full bg-stone-900 px-7 py-2.5 text-sm font-semibold text-[#fdfcf9] hover:bg-stone-800"
+            >
+              Chat now
+            </Link>
+            <Link
+              href="/auth/login?next=/dashboard/chat"
+              className="text-sm font-semibold text-amber-950 underline decoration-amber-900/30 underline-offset-4 hover:decoration-amber-900"
+            >
+              Sign in first
+            </Link>
+          </div>
         </div>
         <p className="mt-10 text-center text-xs text-stone-400">
-          <Link href="/blog" className="font-medium text-stone-500 hover:text-stone-700">
-            Read the journal
+          <Link href="/about" className="font-medium text-stone-500 hover:text-stone-700">
+            About
           </Link>
         </p>
       </section>

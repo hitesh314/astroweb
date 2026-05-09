@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 import { listPublishedBlogPosts } from "@/lib/services/blog";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 
 export const revalidate = 3600;
 
 export async function generateMetadata() {
   return {
-    title: "Astrology journal | AstroMarriage",
-    description:
-      "Guides & explainers powered by AstroMarriage — server-rendered for SEO.",
+    title: `Astrology journal | ${PRACTITIONER.shortName}`,
+    description: `${PRACTITIONER.shortName}'s occasional essays — marriage astrology, rituals, plain-language explainers.`,
   };
 }
 

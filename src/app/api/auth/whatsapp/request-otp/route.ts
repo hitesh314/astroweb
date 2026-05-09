@@ -3,8 +3,9 @@ import { z } from "zod";
 
 import { normalizeE164Phone } from "@/lib/auth/phone";
 import { hashOtpCode, newOtpSalt, randomSixDigitOtp } from "@/lib/auth/whatsapp-otp";
-import { getZavudevClient } from "@/lib/zavudev/server-client";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 import { createServiceSupabaseClient } from "@/lib/supabase/admin";
+import { getZavudevClient } from "@/lib/zavudev/server-client";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_OTP_SENDS_PER_HOUR = 8;
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
 
   if (!process.env.ZAVUDEV_API_KEY) {
     console.error("[request-otp] Missing ZAVUDEV_API_KEY");
-    return NextResponse.json({ error: "WhatsApp messaging is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "SMS messaging is not configured." }, { status: 503 });
   }
 
   const zavuSenderId = process.env.ZAVU_SENDER_ID?.trim();
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: missingTable
-          ? "WhatsApp OTP tables are missing. Run supabase/migrations/20260509130100_whatsapp_otp_auth.sql on your Supabase project (SQL Editor or supabase db push)."
+          ? "Phone sign-in tables are missing. Run supabase/migrations/20260509130100_whatsapp_otp_auth.sql on your Supabase project (SQL Editor or supabase db push)."
           : invalidApiKey
             ? "Supabase rejected SUPABASE_SERVICE_ROLE_KEY. Paste the full service_role secret JWT from Dashboard → Project Settings → API (not anon, not sb_publishable_*). Restart the dev server after saving .env.local."
             : "Could not verify rate limit.",
@@ -119,7 +120,7 @@ export async function POST(req: Request) {
     const messageResponse = await client.messages.send({
       to: phoneE164,
       channel: "whatsapp",
-      text: `Your AstroMarriage sign-in code is ${code}. Do not share it with anyone.`,
+      text: `Your ${PRACTITIONER.otpBrandLine} sign-in code is ${code}. Do not share it with anyone.`,
       "Zavu-Sender": zavuSenderId,
     });
 
@@ -128,12 +129,12 @@ export async function POST(req: Request) {
       console.error("[request-otp] Zavu:", msg.errorCode, msg.errorMessage);
       await admin.from("whatsapp_otp_challenges").delete().eq("phone_e164", phoneE164);
       return NextResponse.json(
-        { error: msg.errorMessage ?? "Could not deliver WhatsApp code." },
+        { error: msg.errorMessage ?? "Could not deliver your code." },
         { status: 502 },
       );
     }
   } catch (e) {
-    const fallback = "Could not send WhatsApp.";
+    const fallback = "Could not send sign-in code.";
     const message =
       e instanceof Error
         ? e.message

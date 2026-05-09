@@ -30,6 +30,7 @@ export default function DashboardHomePage() {
 
       <section className="grid gap-4 sm:grid-cols-3">
         {[
+          ["Consultation chat", "/dashboard/chat", "Text, photos, voice notes"],
           ["Saved readings", "/dashboard/reports", "Snapshots with PDF export"],
           ["Compatibility", "#", "Twin kundli analysis queue"],
           ["Consultations", "#", "Human astrologers (stub)"],

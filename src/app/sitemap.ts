@@ -1,7 +1,5 @@
 import type { MetadataRoute } from "next";
 
-import { listPublishedBlogPosts } from "@/lib/services/blog";
-
 function base(): string {
   return (
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
@@ -10,17 +8,8 @@ function base(): string {
   );
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
   const b = base();
-  const posts = await listPublishedBlogPosts(400);
-
-  const blogUrls: MetadataRoute.Sitemap =
-    posts.map((p) => ({
-      url: `${b}/blog/${p.slug}`,
-      lastModified: new Date(p.updated_at ?? p.created_at),
-      changeFrequency: "weekly",
-      priority: 0.75,
-    })) ?? [];
 
   return [
     {
@@ -29,8 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 1,
     },
-    { url: `${b}/blog`, lastModified: new Date(), priority: 0.85 },
+    { url: `${b}/services`, lastModified: new Date(), priority: 0.85 },
+    { url: `${b}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${b}/auth/login`, priority: 0.3 },
-    ...blogUrls,
   ];
 }

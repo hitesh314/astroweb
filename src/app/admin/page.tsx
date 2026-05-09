@@ -16,7 +16,6 @@ export default async function AdminHomePage() {
   const cards = [
     { title: "Registered profiles", value: userCount ?? "—", href: "/admin/activity" },
     { title: "Astrology reports", value: reportCount ?? "—", href: "/admin/reports" },
-    { title: "Blog CMS", subtitle: "Edit posts & SEO", href: "/admin/blog" },
     {
       title: "AI prompt versions",
       subtitle: "Versioned lineage for reports & chat",

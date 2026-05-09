@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { getBlogPostBySlug } from "@/lib/services/blog";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 import type { Database } from "@/types/database.types";
 
 import { createClient } from "@supabase/supabase-js";
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = post.seo_title ?? post.title;
   const description = post.seo_description ?? post.excerpt ?? undefined;
   return {
-    title: `${title} | AstroMarriage`,
+    title: `${title} | ${PRACTITIONER.shortName}`,
     description: description ?? "",
     openGraph: { title, description },
   };

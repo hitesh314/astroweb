@@ -2,24 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MarketingHeader from "@/components/marketing-header";
-import { whatsappPlanInterestHref } from "@/lib/contact/whatsapp-payment";
+import { CHAT_LOGIN_HREF } from "@/lib/site/chat-cta";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 
 export const metadata: Metadata = {
-  title: "Services & offerings | AstroMarriage",
-  description:
-    "Vedic marriage insights, kundli, compatibility, AI reports, and consultations — explore everything before you create an account.",
+  title: `Services & offerings | ${PRACTITIONER.shortName}`,
+  description: `${PRACTITIONER.shortName} — browse marriage readings, kundli workflows, compatibility, chat, and consultations; ask about pricing in chat.`,
 };
 
-function BuyButton({ label, planName }: { label: string; planName: string }) {
+function ChatNowButton() {
   return (
-    <a
-      href={whatsappPlanInterestHref(planName)}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href={CHAT_LOGIN_HREF}
       className="inline-flex rounded-full bg-stone-900 px-6 py-2.5 text-sm font-semibold text-[#fdfcf9] shadow-sm hover:bg-stone-800"
     >
-      {label}
-    </a>
+      Chat now
+    </Link>
   );
 }
 
@@ -28,32 +26,32 @@ export default function ServicesPage() {
     {
       title: "Celestial union forecast",
       body: "Love, arranged, and hybrid marriage scores with confidence bands and an AI narrative you can share.",
-      priceNote: "Pricing on WhatsApp",
+      priceNote: "Pricing in chat",
     },
     {
       title: "Kundli & birth chart storage",
       body: "Save birth place, time zone, and raw chart JSON for repeat analyses and PDF exports.",
-      priceNote: "Pricing on WhatsApp",
+      priceNote: "Pricing in chat",
     },
     {
       title: "Partner compatibility",
       body: "Pair two saved kundli profiles for a dedicated compatibility reading and score.",
-      priceNote: "Pricing on WhatsApp",
+      priceNote: "Pricing in chat",
     },
     {
       title: "AI marriage coach (chat)",
       body: "Private chat history stored under your account with prompt lineage for trust and safety.",
-      priceNote: "Subscription · ask on WhatsApp",
+      priceNote: "Subscription · ask in chat",
     },
     {
       title: "Expert consultations",
       body: "Book a human astrologer; calendar and notes sync to your profile when you check out.",
-      priceNote: "Pricing on WhatsApp",
+      priceNote: "Pricing in chat",
     },
     {
       title: "Shareable report cards",
       body: "Generated visuals land in secure storage — perfect for Instagram-ready shares.",
-      priceNote: "Add-on · ask on WhatsApp",
+      priceNote: "Add-on · ask in chat",
     },
   ];
 
@@ -69,8 +67,8 @@ export default function ServicesPage() {
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-stone-600">
           There is no paywall to browse. When you purchase or unlock features in your
-          dashboard, we may ask you to sign in — one quick step. Payment is coordinated on
-          WhatsApp (+91 9358214529).
+          dashboard, we may ask you to sign in — one quick step. Payment and details are
+          coordinated in chat after you connect.
         </p>
 
         <ul className="mt-14 grid gap-6 sm:grid-cols-2">
@@ -93,7 +91,7 @@ export default function ServicesPage() {
         <section className="mt-20 rounded-3xl border border-stone-200 bg-white p-10 shadow-inner shadow-stone-100">
           <h2 className="text-2xl font-semibold text-stone-900">Plans</h2>
           <p className="mt-2 text-sm text-stone-600">
-            Pick a tier when you are ready — we&apos;ll continue on WhatsApp for payment and
+            Pick a tier when you are ready — we&apos;ll continue in chat for payment and
             details.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
@@ -101,7 +99,7 @@ export default function ServicesPage() {
               {
                 name: "Seeker",
                 price: "Free",
-                blurb: "Browse journal + service catalogue",
+                blurb: "Browse the site + service catalogue",
               },
               {
                 name: "Union",
@@ -134,7 +132,7 @@ export default function ServicesPage() {
                   </Link>
                 ) : (
                   <div className="mt-6">
-                    <BuyButton label={`Get ${p.name}`} planName={p.name} />
+                    <ChatNowButton />
                   </div>
                 )}
               </div>
@@ -144,12 +142,8 @@ export default function ServicesPage() {
 
         <p className="mt-12 text-center text-sm text-stone-500">
           Questions?{" "}
-          <Link href="/blog" className="font-medium text-amber-900 hover:underline">
-            Read our journal
-          </Link>{" "}
-          or return{" "}
           <Link href="/" className="font-medium text-amber-900 hover:underline">
-            home
+            Return home
           </Link>
           .
         </p>

@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { signOutAction } from "@/actions/auth";
+import { PRACTITIONER } from "@/lib/site/practitioner";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", match: "exact" as const },
+  { href: "/dashboard/chat", label: "Chat", match: "exact" as const },
   { href: "/dashboard/reports", label: "Reports", match: "prefix" as const },
-  { href: "/blog", label: "Journal", match: "prefix" as const },
   { href: "/dashboard/subscription", label: "Subscription", match: "prefix" as const },
 ];
 
@@ -36,7 +37,7 @@ export default function DashboardSiteHeader({ displayName }: Props) {
               href="/dashboard"
               className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight text-stone-900 sm:text-xl"
             >
-              Your sanctuary
+              {PRACTITIONER.shortName}&apos;s client space
             </Link>
             <p className="mt-0.5 truncate text-xs text-stone-500 sm:text-[0.8125rem]">
               <span className="text-stone-600">{displayName}</span>

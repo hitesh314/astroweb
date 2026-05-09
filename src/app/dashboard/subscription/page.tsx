@@ -1,22 +1,9 @@
-import { whatsappMarriageReadingHref } from "@/lib/contact/whatsapp-payment";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+import { PRACTITIONER } from "@/lib/site/practitioner";
+import { CHAT_APP_HREF } from "@/lib/site/chat-cta";
 
-export default async function DashboardSubscriptionPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const email = user?.email ?? null;
-  const name =
-    (user?.user_metadata?.full_name as string | undefined) ??
-    (user?.user_metadata?.name as string | undefined) ??
-    null;
-
-  const waHref = whatsappMarriageReadingHref({ email, name });
-
+export default function DashboardSubscriptionPage() {
   return (
     <div className="space-y-10">
       <div>
@@ -24,9 +11,8 @@ export default async function DashboardSubscriptionPage() {
           Plans & checkout
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-stone-600">
-          Complete booking and payment over WhatsApp — we&apos;ll share options in chat.
-          When you&apos;re signed in, your dashboard email can be prefilled so we can match
-          your payment to your account.
+          Open chat with {PRACTITIONER.shortName} to discuss options, pricing, and payment —
+          your signed-in account keeps everything tied to your dashboard profile.
         </p>
       </div>
 
@@ -36,23 +22,21 @@ export default async function DashboardSubscriptionPage() {
             Marriage reading
           </p>
           <p className="mt-4 text-sm leading-relaxed text-stone-600">
-            Pricing is confirmed in WhatsApp — we don&apos;t show public rate cards here.
+            Rates and details are confirmed in chat — we don&apos;t show public rate cards here.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-stone-700">
             <li>• Written report — love vs arranged focus</li>
             <li>• One chart, plain language delivery</li>
           </ul>
           <div className="mt-8">
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-full bg-[#25D366] px-8 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#20bd5a]"
+            <Link
+              href={CHAT_APP_HREF}
+              className="inline-flex w-full items-center justify-center rounded-full bg-stone-900 px-8 py-3 text-sm font-semibold text-[#fdfcf9] shadow-sm transition hover:bg-stone-800"
             >
-              Continue on WhatsApp
-            </a>
+              Chat now
+            </Link>
             <p className="mt-3 text-center text-xs text-stone-500">
-              Opens WhatsApp to +91 9358214529
+              Opens your consultation thread in the dashboard
             </p>
           </div>
         </article>

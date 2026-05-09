@@ -9,14 +9,19 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 export function useSupabaseSession() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [session, setSession] = useState<Session | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setInitialized(true);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => {
       setSession(sess);
+      setInitialized(true);
     });
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
-  return { session, supabase };
+  return { session, supabase, initialized };
 }

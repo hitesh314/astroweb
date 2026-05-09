@@ -66,7 +66,7 @@ export async function mintPhonePasswordForSession(
     phone: phoneE164,
     phone_confirm: true,
     password,
-    user_metadata: { sign_up_channel: "whatsapp_otp" },
+    user_metadata: { sign_up_channel: "phone_otp" },
   });
 
   if (!createErr && created.user?.id) {
