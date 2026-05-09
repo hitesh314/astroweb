@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import MarketingHeader from "@/components/marketing-header";
 import { CHAT_LOGIN_HREF } from "@/lib/site/chat-cta";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 /** Loose Google Maps–style palette for avatar discs (initial only, no photo). */
 const AVATAR_RING = ["bg-emerald-600", "bg-blue-600", "bg-purple-600", "bg-orange-600"] as const;
@@ -70,10 +71,36 @@ function StarRow({ rating }: { rating: 1 | 2 | 3 | 4 | 5 }) {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let showAdminChatShortcut = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("is_admin, role")
+      .eq("id", user.id)
+      .maybeSingle();
+    showAdminChatShortcut = profile?.is_admin === true || profile?.role === "admin";
+  }
+
   return (
     <div className="min-h-dvh bg-[#fdfcf9] text-stone-900">
       <MarketingHeader />
+
+      {showAdminChatShortcut ? (
+        <div className="border-b border-amber-900/10 bg-amber-50/95 px-5 py-2.5 text-center">
+          <Link
+            href="/admin/chat"
+            className="text-sm font-semibold tracking-tight text-amber-950 underline decoration-amber-900/35 underline-offset-4 hover:text-amber-900 hover:decoration-amber-900"
+          >
+            Admin — open chat inbox
+          </Link>
+        </div>
+      ) : null}
 
       {/* Hero */}
       <section className="mx-auto max-w-xl px-5 pb-14 pt-10 text-center">
@@ -206,10 +233,6 @@ export default function Home() {
       <section className="mx-auto max-w-xl border-t border-stone-200 px-5 pb-20 pt-14">
         <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-orange-50/40 px-5 py-6 text-center">
           <h2 className="text-lg font-semibold text-stone-900">Chat with an astrologer</h2>
-          <p className="mt-2 text-sm leading-relaxed text-stone-600">
-            In-dashboard chat supports text, photos, and voice notes (GetStream).{" "}
-            <strong className="text-stone-800">First 3 minutes free</strong> apply after you sign in.
-          </p>
           <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/dashboard/chat"

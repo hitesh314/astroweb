@@ -13,6 +13,33 @@ export type Database = {
   };
   public: {
     Tables: {
+      admin_web_push_subscriptions: {
+        Row: {
+          admin_user_id: string;
+          auth: string;
+          endpoint: string;
+          id: string;
+          p256dh: string;
+          updated_at: string;
+        };
+        Insert: {
+          admin_user_id: string;
+          auth: string;
+          endpoint: string;
+          id?: string;
+          p256dh: string;
+          updated_at?: string;
+        };
+        Update: {
+          admin_user_id?: string;
+          auth?: string;
+          endpoint?: string;
+          id?: string;
+          p256dh?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       ai_chat_history: {
         Row: {
           created_at: string;
@@ -160,6 +187,21 @@ export type Database = {
           slug?: string;
           title?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      client_consult_chat_first_visit: {
+        Row: {
+          first_seen_at: string;
+          user_id: string;
+        };
+        Insert: {
+          first_seen_at?: string;
+          user_id: string;
+        };
+        Update: {
+          first_seen_at?: string;
+          user_id?: string;
         };
         Relationships: [];
       };

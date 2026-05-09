@@ -184,11 +184,6 @@ function LoginFormInner({ nextHref }: { nextHref?: string }) {
         <h1 className="mt-4 text-center text-3xl font-semibold tracking-tight">
           Sign in
         </h1>
-        <p className="mt-3 text-center text-sm text-stone-600">
-          Returning clients · Google OAuth or a one-time code texted to your mobile (
-          {PRACTITIONER.shortName}&apos;s private charts portal). Google creates your secure client
-          folder automatically when you first approve access.
-        </p>
 
         <div className="mx-auto mt-10 space-y-4">
           <a

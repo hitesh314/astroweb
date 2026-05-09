@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/actions/auth";
+import AdminChatPushEnrollment from "@/components/admin/admin-chat-push-enrollment";
 import { PRACTITIONER } from "@/lib/site/practitioner";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -59,6 +60,9 @@ export default async function AdminLayout({
               User app
             </Link>
           </nav>
+          <div className="w-full lg:w-auto lg:max-w-md">
+            <AdminChatPushEnrollment />
+          </div>
           <form action={signOutAction}>
             <button
               type="submit"

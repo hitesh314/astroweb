@@ -3,6 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/supabase-session";
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/push-sw.js") {
+    return NextResponse.next();
+  }
   const { response, user } = await updateSession(request);
   const path = request.nextUrl.pathname;
 

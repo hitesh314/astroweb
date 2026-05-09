@@ -25,10 +25,12 @@ type BootstrapPayload = {
   userName: string;
 };
 
-function consultChannelPickerLabel(cid: string | undefined): string {
-  const clientUid = parseConsultChannelClientUserId(cid ?? "");
-  if (!clientUid) return cid ?? "Channel";
-  return `Customer ${clientUid.slice(0, 8)}…`;
+function consultChannelCustomerDisplayName(ch: StreamChannel, localId: string): string {
+  const clientUid = parseConsultChannelClientUserId(localId);
+  if (!clientUid) return localId || "Channel";
+  const raw = ch.state?.members?.[clientUid]?.user?.name?.trim();
+  if (raw) return raw;
+  return "Customer";
 }
 
 function shortTimestamp(iso: string | undefined): string {
@@ -45,6 +47,18 @@ function shortTimestamp(iso: string | undefined): string {
   }
 }
 
+async function queryConsultInbox(streamClient: StreamChat, adminUserId: string): Promise<StreamChannel[]> {
+  const list = await streamClient.queryChannels(
+    {
+      type: "messaging",
+      members: { $in: [adminUserId] },
+    },
+    { last_message_at: -1 },
+    { limit: 80, state: true },
+  );
+  return list.filter((ch) => Boolean(parseConsultChannelClientUserId(streamMessagingLocalId(ch))));
+}
+
 /** Full Stream Chat window — same light theme as dashboard chat. */
 function AdminConsultChatWindow({
   client,
@@ -54,7 +68,7 @@ function AdminConsultChatWindow({
   activeChannel: StreamChannel;
 }) {
   const headerTitle =
-    `${consultChannelPickerLabel(streamMessagingLocalId(activeChannel))}` +
+    `${consultChannelCustomerDisplayName(activeChannel, streamMessagingLocalId(activeChannel))}` +
     ` · ${PRACTITIONER.shortName} consultation`;
 
   return (
@@ -79,6 +93,12 @@ export default function AdminConsultInbox() {
   const [activeChannel, setActiveChannel] = useState<StreamChannel | null>(null);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<StreamChat | null>(null);
+  const adminUserIdRef = useRef<string | null>(null);
+  const activeChannelRef = useRef<StreamChannel | null>(null);
+
+  useEffect(() => {
+    activeChannelRef.current = activeChannel;
+  }, [activeChannel]);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,22 +120,12 @@ export default function AdminConsultInbox() {
 
         const streamClient = new StreamChat(data.apiKey);
         clientRef.current = streamClient;
+        adminUserIdRef.current = data.userId;
         await streamClient.connectUser({ id: data.userId, name: data.userName }, data.token);
 
-        const list = await streamClient.queryChannels(
-          {
-            type: "messaging",
-            members: { $in: [data.userId] },
-          },
-          { last_message_at: -1 },
-          { limit: 80 },
-        );
+        const inbox = await queryConsultInbox(streamClient, data.userId);
 
-        const inbox = list.filter((ch) =>
-          Boolean(parseConsultChannelClientUserId(streamMessagingLocalId(ch))),
-        );
-
-        let active: StreamChannel | null = inbox[0] ?? null;
+        const active: StreamChannel | null = inbox[0] ?? null;
         if (active) {
           await active.watch({ state: true });
         }
@@ -123,8 +133,11 @@ export default function AdminConsultInbox() {
         if (cancelled) {
           await streamClient.disconnectUser();
           clientRef.current = null;
+          adminUserIdRef.current = null;
           return;
         }
+
+        activeChannelRef.current = active;
 
         setChannels(inbox);
         setActiveChannel(active);
@@ -138,6 +151,7 @@ export default function AdminConsultInbox() {
 
     return () => {
       cancelled = true;
+      adminUserIdRef.current = null;
       if (clientRef.current) {
         void clientRef.current.disconnectUser();
         clientRef.current = null;
@@ -145,9 +159,60 @@ export default function AdminConsultInbox() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!client) return;
+    const adminId = adminUserIdRef.current;
+    if (!adminId) return;
+
+    const debounceMs = 320;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const flush = () => {
+      void (async () => {
+        try {
+          const inbox = await queryConsultInbox(client, adminId);
+
+          const prev = activeChannelRef.current;
+          let nextActive: StreamChannel | null = null;
+          if (prev) {
+            const prevId = streamMessagingLocalId(prev);
+            nextActive = inbox.find((c) => streamMessagingLocalId(c) === prevId) ?? null;
+            if (nextActive) {
+              await nextActive.watch({ state: true });
+            }
+          }
+
+          setChannels(inbox);
+          setActiveChannel(nextActive);
+          activeChannelRef.current = nextActive;
+        } catch {
+          /* ignore realtime query blips */
+        }
+      })();
+    };
+
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(flush, debounceMs);
+    };
+
+    const subs = [
+      client.on("notification.added_to_channel", schedule),
+      client.on("notification.message_new", schedule),
+      client.on("notification.channel_deleted", schedule),
+      client.on("connection.recovered", schedule),
+    ];
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      subs.forEach((s) => s.unsubscribe());
+    };
+  }, [client]);
+
   const pickChannel = async (ch: StreamChannel) => {
     try {
       await ch.watch({ state: true });
+      activeChannelRef.current = ch;
       setActiveChannel(ch);
     } catch {
       setError("Could not open conversation.");
@@ -193,13 +258,14 @@ export default function AdminConsultInbox() {
                   key={ch.cid ?? localId}
                   type="button"
                   onClick={() => void pickChannel(ch)}
-                  className={`block w-full border-b border-stone-200 px-4 py-3 text-left text-sm transition-colors hover:bg-amber-50/80 ${
-                    picked
+                  className={`block w-full border-b border-stone-200 px-4 py-3 text-left text-sm transition-colors hover:bg-amber-50/80 ${picked
                       ? "border-l-2 border-l-amber-500 bg-amber-50/90 text-stone-900"
                       : "border-l-2 border-l-transparent text-stone-700"
-                  }`}
+                    }`}
                 >
-                  <span className="font-medium">{consultChannelPickerLabel(localId)}</span>
+                  <span className="font-medium">
+                    {consultChannelCustomerDisplayName(ch, localId)}
+                  </span>
                   <span className="mt-0.5 block text-xs text-stone-500">
                     {shortTimestamp(lastIso)}
                   </span>

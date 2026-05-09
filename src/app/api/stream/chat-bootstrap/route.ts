@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { notifyAdminsFirstConsultChatOpen } from "@/lib/notifications/admin-chat-web-push";
 import { bootstrapStreamConsultRoom } from "@/lib/stream/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -26,6 +27,11 @@ export async function GET() {
       "Client";
 
     const session = await bootstrapStreamConsultRoom(user.id, clientDisplay);
+    void notifyAdminsFirstConsultChatOpen({
+      clientUserId: user.id,
+      clientDisplayName: clientDisplay,
+    }).catch((e) => console.error("[chat-bootstrap] admin push:", e));
+
     return NextResponse.json(session);
   } catch (e) {
     const msg =
