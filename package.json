@@ -1,19 +1,31 @@
 {
-  "name": "astroweb-tmp",
+  "name": "astroweb",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "stitch:export": "node scripts/fetch-stitch-vedic-marriage.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
+    "@vercel/analytics": "^2.0.1",
+    "framer-motion": "^12.38.0",
     "next": "16.2.6",
+    "posthog-js": "^1.372.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
+    "sonner": "^2.0.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@google/stitch-sdk": "^0.3.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
